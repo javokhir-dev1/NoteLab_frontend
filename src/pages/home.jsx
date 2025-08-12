@@ -1,20 +1,56 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 function Home() {
-    let [token, setToken] = useState(null)
-    let navigate = useNavigate()
+    const [user, setUser] = useState({email: "", username: ""})
+    const navigate = useNavigate()
+    const token = JSON.parse(localStorage.getItem("token"))
     useEffect(() => {
-        let tokenLocal = localStorage.getItem("token")
-        if (!tokenLocal) {
+        if (!token || !token.token || !token.success) {
+            localStorage.removeItem("token");
             navigate("/login")
         } else {
-            setToken(tokenLocal)
+            async function fetchData() {
+                try {
+                    const res = await fetch(`${apiUrl}/users/profile`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${token.token}`
+                        }
+                    })
+
+                    if (!res.ok) {
+                        localStorage.removeItem("token");
+                        navigate("/login")
+                        throw new Error("Profil ma'lumotlarini olishda xatolik yuz berdi");
+                    }
+
+                    const json = await res.json()
+                    if (!json.success) {
+                        localStorage.removeItem("token");
+                        navigate("/login")
+                    } else {
+                        setUser(json.user)
+                    }
+                } catch (err) {
+                    localStorage.removeItem("token");
+                    navigate("/login")
+                    console.log(err)
+                }
+            }
+
+            fetchData()
         }
-    }, [])
+    }, [token, navigate])
+
     return (
-        <>{token}</>
-    )
+        <div>
+            {user.username}<br/>
+            {user.email}
+        </div>
+    );
 }
 
-export default Home
+export default Home;
