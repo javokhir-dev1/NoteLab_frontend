@@ -1,0 +1,30 @@
+.home_page {
+    background: url("/background3.jpg") center center / cover no-repeat;
+    height: 100vh;
+    display: flex;
+    font-family: "Poppins", sans-serif;
+}
+
+.home_left {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background-color: rgba(0, 0, 0, 0.25);
+    width: 300px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.user_name {
+    background-color: rgba(139, 92, 246, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    padding: 20px;
+    height: 50px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+    font-weight: 500;
+}

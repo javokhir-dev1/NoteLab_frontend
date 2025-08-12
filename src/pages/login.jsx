@@ -32,6 +32,13 @@ function Login() {
                 })
 
                 let json = await data.json()
+                if (json.isWrongEmail) {
+                    setEmailErr(json.error)
+                } else if (json.isWrongPassword) {
+                    setPasswordErr(json.error)
+                }
+
+                
                 if (json.success) {
                     localStorage.setItem("token", JSON.stringify(json))
                     navigate("/")

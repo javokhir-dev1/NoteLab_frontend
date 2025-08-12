@@ -3,8 +3,13 @@ import { useNavigate } from "react-router-dom"
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
+import "./css/home.css"
+
 function Home() {
-    const [user, setUser] = useState({email: "", username: ""})
+    const [user, setUser] = useState({ email: "", username: "" })
+    const username = user.username
+        ? user.username.charAt(0).toUpperCase() + user.username.slice(1).toLowerCase()
+        : "";
     const navigate = useNavigate()
     const token = JSON.parse(localStorage.getItem("token"))
     useEffect(() => {
@@ -45,11 +50,16 @@ function Home() {
         }
     }, [token, navigate])
 
+
     return (
-        <div>
-            {user.username}<br/>
-            {user.email}
+        <div className="home_page">
+            <div className="home_left">
+                <h3 className="user_name">{username}</h3>
+            </div>
+            <div className="home_right"></div>
         </div>
+
+
     );
 }
 
