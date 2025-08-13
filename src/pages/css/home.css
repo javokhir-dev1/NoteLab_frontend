@@ -10,21 +10,111 @@
     -webkit-backdrop-filter: blur(20px);
     background-color: rgba(0, 0, 0, 0.25);
     width: 300px;
-    padding: 20px;
+    overflow-y: scroll;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    position: relative;
+}
+
+/* Scrollbar eni */
+.home_left::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* Scroll track (orqa fon) */
+.home_left::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Scroll thumb (tayoqcha) */
+.home_left::-webkit-scrollbar-thumb {
+    background: rgba(200, 200, 200, 0.6);
+    border-radius: 3px;
+}
+
+/* Hoverda tayoqcha rangi */
+.home_left::-webkit-scrollbar-thumb:hover {
+    background: rgba(200, 200, 200, 0.8);
 }
 
 .user_name {
-    background-color: rgba(139, 92, 246, 0.4);
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #1A2A63;
+    /* qattiq fon rangi */
+    color: #E0E7FF;
+    padding: 20px 30px;
+    height: 60px;
+    box-shadow: 0 6px 15px rgba(224, 231, 255, 0.3);
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    user-select: none;
+    letter-spacing: 1px;
+    z-index: 10;
+}
+
+
+.folders_box {
+    margin-top: 20px;
+    padding: 0 20px;
+}
+
+.folder_item {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     color: white;
-    padding: 20px;
-    height: 50px;
+    padding: 15px 20px;
+    min-height: 50px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
     display: flex;
     align-items: center;
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 500;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
+}
+
+.folder_item:hover {
+    background-color: rgba(139, 92, 246, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(139, 92, 246, 0.5);
+}
+
+.create_folder_btn_box {
+    padding: 0 20px;
+}
+
+.create_folder_btn {
+    background-color: inherit;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+    margin-top: 50px;
+    width: 100%;
+}
+
+.create_folder_btn:hover {
+    background-color: rgba(139, 92, 246, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(139, 92, 246, 0.5);
+}
+
+.create_folder_btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 15px rgba(139, 92, 246, 0.3);
 }
