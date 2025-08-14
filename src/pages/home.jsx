@@ -125,6 +125,30 @@ function Home() {
         }
     }
 
+    const [newNote, setNewNote] = useState("")
+
+    const createNote = async () => {
+        const id = localStorage.getItem("folderId")
+        try {
+            let data = await fetch(`${apiUrl}/notes/create-note`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ folderId: id, message: newNote })
+            })
+            let json = await data.json()
+            if (!json.success) {
+                alert("An error occurred")
+            } else {
+                setNotes(prevNotes => [...prevNotes, json.data])
+                setNewNote("")
+            }
+            
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+
 
     return (
         <div className="home_page">
@@ -157,12 +181,14 @@ function Home() {
                         <div className="input_box folder_form_input_box">
                             <textarea
                                 type="text"
+                                value={newNote}
                                 onChange={(e) => {
+                                    setNewNote(e.target.value)
                                     e.target.style.height = "auto";
                                     let newHeight = e.target.scrollHeight;
                                     if (newHeight > 300) {
-                                        newHeight = 300; 
-                                        e.target.style.overflowY = "auto"; 
+                                        newHeight = 300;
+                                        e.target.style.overflowY = "auto";
                                     } else {
                                         e.target.style.overflowY = "hidden";
                                     }
@@ -171,7 +197,7 @@ function Home() {
                                 placeholder="name"
                                 className="form_input folder_form_input"
                             />
-                            <button className="folder_btn">Add</button>
+                            <button onClick={createNote} className="folder_btn">Add</button>
                         </div>
                     </div>
                 </div>

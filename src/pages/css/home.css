@@ -246,6 +246,7 @@
     overflow-y: scroll;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     position: relative;
+    padding-bottom: 100px;
 }
 
 .home_right_box::-webkit-scrollbar {
