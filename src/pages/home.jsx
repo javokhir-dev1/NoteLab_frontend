@@ -142,16 +142,18 @@ function Home() {
                 setNotes(prevNotes => [...prevNotes, json.data])
                 setNewNote("")
             }
-            
+
         } catch (err) {
             console.log(err)
         }
     }
 
-
+    const [activeFolderOption, setActiveFolderOption] = useState(null)
 
     return (
-        <div className="home_page">
+        <div className="home_page" onClick={(e) => {
+            setActiveFolderOption(null)
+        }}>
             <div className="home_left">
 
                 <h3 className="user_name">{username}</h3>
@@ -162,7 +164,51 @@ function Home() {
                 </div>
 
                 <div className="folders_box">
-                    {folders.map((folder) => <div key={folder._id} onClick={(e) => openFolder(folder._id)} className="folder_item"><p>{folder.noteName}</p><i className='bxr  bx-folder'  ></i> </div>)}
+                    {folders.map((folder) => <div key={folder._id} onClick={(e) => openFolder(folder._id)} className="folder_item">
+                        <p>{folder.noteName}</p>
+                        <div className='bx bx-dots-horizontal-rounded folder_more_options_btn' onClick={(e) => {
+                            e.stopPropagation()
+                            if (activeFolderOption === folder._id) {
+                                setActiveFolderOption(null)
+                            } else {
+                                setActiveFolderOption(folder._id)
+                            }
+                        }}>
+                            <div className="more_options_box" style={{ display: activeFolderOption === folder._id ? "flex" : "none" }}>
+                                <button className="bxr  bx-trash-alt more_options_btn" onMouseEnter={(e) => {
+                                    e.target.classList.remove("bx-trash-alt")
+                                    e.target.classList.add("bxs-trash-alt")
+                                }} onMouseLeave={(e) => {
+                                    e.target.classList.remove("bxs-trash-alt")
+                                    e.target.classList.add("bx-trash-alt")
+                                }}
+                                onClick={async () => {
+                                    try {
+                                        let data = await fetch(`${apiUrl}/folders/delete-folder/${activeFolderOption}`, {
+                                            method: "DELETE"
+                                        })
+                                        let json = await data.json() 
+                                        if (!json.success) {
+                                            alert("Xatolik yuz berdi")
+                                        } else {
+                                            setRefreshFolders((prev) => prev + 1)
+                                            setIsFolderOpen(false)
+                                        }
+                                    } catch(err) {
+                                        console.log(err)
+                                    }
+                                }}
+                                ></button>
+                                <button className="bxr  bx-pencil more_options_btn" onMouseEnter={(e) => {
+                                    e.target.classList.remove("bx-pencil")
+                                    e.target.classList.add("bxs-pencil")
+                                }} onMouseLeave={(e) => {
+                                    e.target.classList.remove("bxs-pencil")
+                                    e.target.classList.add("bx-pencil")
+                                }}></button>
+                            </div>
+                        </div>
+                    </div>)}
                 </div>
             </div>
             <div className="home_right">
