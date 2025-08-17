@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react"
+import { act, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import Modal from "../components/modal/modal.jsx";
+import ErrModal from "../components/errorModal/errorModal.jsx";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -10,6 +12,14 @@ function Home() {
     const [user, setUser] = useState({ email: "", username: "" })
     const [folders, setFolders] = useState([])
     const [refreshFolders, setRefreshFolders] = useState(0);
+    const [errModalTitle, setErrModalTitle] = useState("")
+
+    const [isErrorModalOpen, setIsErrorModalOpen] = useState(false)
+
+    const showError = (message) => {
+        setErrModalTitle(message);
+        setIsErrorModalOpen(true);
+    };
 
     const username = user.username
         ? user.username.charAt(0).toUpperCase() + user.username.slice(1).toLowerCase()
@@ -65,7 +75,7 @@ function Home() {
                     const json = await res.json()
                     setFolders(json.data)
                 } catch (err) {
-                    console.log(err)
+                    showError(err.message)
                 }
             }
 
@@ -95,14 +105,13 @@ function Home() {
                 let json = await data.json()
                 if (json.success) {
                     setRefreshFolders(prev => prev + 1)
-                    alert("Folder qo'shildi!")
                     setIsModalOpen(false)
                     setNewFolderName("")
                 } else {
-                    alert("Folder qo'shishda xatolik!")
+                    showError("Folder qo'shishda xatolik!")
                 }
             } catch (err) {
-                console.log(err)
+                showError(err.message)
             }
         }
     }
@@ -111,17 +120,18 @@ function Home() {
     const [folderName, setFolderName] = useState("")
     const [notes, setNotes] = useState([])
 
+    const [activeFolder, setActiveFolder] = useState(null)
+
     const openFolder = async (id) => {
         localStorage.setItem("folderId", id)
         setIsFolderOpen(true)
         try {
             let data = await fetch(`${apiUrl}/folders/show-folder/${id}`)
             let json = await data.json()
-            console.log(json)
             setFolderName(json.folder.noteName)
             setNotes(json.notes)
         } catch (err) {
-            console.log(err)
+            showError(err.message)
         }
     }
 
@@ -129,30 +139,67 @@ function Home() {
 
     const createNote = async () => {
         const id = localStorage.getItem("folderId")
-        try {
-            let data = await fetch(`${apiUrl}/notes/create-note`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ folderId: id, message: newNote })
-            })
-            let json = await data.json()
-            if (!json.success) {
-                alert("An error occurred")
-            } else {
-                setNotes(prevNotes => [...prevNotes, json.data])
-                setNewNote("")
-            }
+        if (newNote.trim() !== "") {
+            try {
+                let data = await fetch(`${apiUrl}/notes/create-note`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ folderId: id, message: newNote })
+                })
+                let json = await data.json()
+                if (!json.success) {
+                    showError("An error occurred")
+                } else {
+                    setNotes(prevNotes => [...prevNotes, json.data])
+                    setNewNote("")
 
-        } catch (err) {
-            console.log(err)
+                    const textarea = document.querySelector(".folder_form_input")
+                    if (textarea) {
+                        textarea.style.height = "auto"
+                        textarea.style.overflowY = "hidden"
+                    }
+                }
+            } catch (err) {
+                showError(err.message)
+            }
+        } else {
+            showError("Note cannot be empty")
         }
     }
 
+
     const [activeFolderOption, setActiveFolderOption] = useState(null)
+
+    const [isChangeNameFolderModalOpen, setIsChangeNameFolderModalOpen] = useState(false)
+    const [newChangedFolderName, setNewChangedFolderName] = useState("")
+
+    const changeFolderName = async () => {
+        if (newChangedFolderName !== "") {
+            try {
+                let data = await fetch(`${apiUrl}/folders/change-name/${activeFolderOption}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ noteName: newChangedFolderName })
+                })
+
+                let json = await data.json()
+                if (!json.success) {
+                    showError("An error occurred")
+                } else {
+                    setIsChangeNameFolderModalOpen(false)
+                    setRefreshFolders((prev) => prev + 1)
+                }
+            } catch (err) {
+                showError(err.message)
+            }
+        }
+    }
 
     return (
         <div className="home_page" onClick={(e) => {
-            setActiveFolderOption(null)
+            if (!e.target.closest(".folders_box") && !e.target.closest(".modal")) {
+                setActiveFolderOption(null)
+            }
         }}>
             <div className="home_left">
 
@@ -164,48 +211,48 @@ function Home() {
                 </div>
 
                 <div className="folders_box">
-                    {folders.map((folder) => <div key={folder._id} onClick={(e) => openFolder(folder._id)} className="folder_item">
-                        <p>{folder.noteName}</p>
+                    {folders.map((folder) => <div style={{ background: activeFolder == folder._id ? "rgba(139, 92, 246, 0.4)" : "" }} key={folder._id} onClick={(e) => {
+                        openFolder(folder._id)
+                        setActiveFolder(folder._id)
+                    }} className="folder_item">
+                        <p className="folder_title">{folder.noteName}</p>
                         <div className='bx bx-dots-horizontal-rounded folder_more_options_btn' onClick={(e) => {
                             e.stopPropagation()
                             if (activeFolderOption === folder._id) {
                                 setActiveFolderOption(null)
                             } else {
                                 setActiveFolderOption(folder._id)
+
                             }
                         }}>
-                            <div className="more_options_box" style={{ display: activeFolderOption === folder._id ? "flex" : "none" }}>
-                                <button className="bxr  bx-trash-alt more_options_btn" onMouseEnter={(e) => {
-                                    e.target.classList.remove("bx-trash-alt")
-                                    e.target.classList.add("bxs-trash-alt")
-                                }} onMouseLeave={(e) => {
-                                    e.target.classList.remove("bxs-trash-alt")
-                                    e.target.classList.add("bx-trash-alt")
-                                }}
-                                onClick={async () => {
-                                    try {
-                                        let data = await fetch(`${apiUrl}/folders/delete-folder/${activeFolderOption}`, {
-                                            method: "DELETE"
-                                        })
-                                        let json = await data.json() 
-                                        if (!json.success) {
-                                            alert("Xatolik yuz berdi")
-                                        } else {
-                                            setRefreshFolders((prev) => prev + 1)
-                                            setIsFolderOpen(false)
+                            <div id="more_options_box" className="more_options_box" style={{ display: activeFolderOption === folder._id ? "flex" : "none" }}>
+                                <button className="bxr  bx-trash more_options_btn"
+
+                                    onClick={async () => {
+                                        try {
+                                            let data = await fetch(`${apiUrl}/folders/delete-folder/${activeFolderOption}`, {
+                                                method: "DELETE"
+                                            })
+                                            let json = await data.json()
+                                            if (!json.success) {
+                                                alert("Xatolik yuz berdi")
+                                            } else {
+                                                setRefreshFolders((prev) => prev + 1)
+                                                setIsFolderOpen(false)
+                                            }
+                                        } catch (err) {
+                                            console.log(err)
                                         }
-                                    } catch(err) {
-                                        console.log(err)
-                                    }
-                                }}
+                                    }}
                                 ></button>
-                                <button className="bxr  bx-pencil more_options_btn" onMouseEnter={(e) => {
-                                    e.target.classList.remove("bx-pencil")
-                                    e.target.classList.add("bxs-pencil")
-                                }} onMouseLeave={(e) => {
-                                    e.target.classList.remove("bxs-pencil")
-                                    e.target.classList.add("bx-pencil")
-                                }}></button>
+                                <button className="bxr  bx-pencil more_options_btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setIsChangeNameFolderModalOpen(true)
+                                        setNewChangedFolderName(folder.noteName)
+                                        setActiveFolderOption(folder._id)
+                                    }}
+                                ></button>
                             </div>
                         </div>
                     </div>)}
@@ -213,10 +260,14 @@ function Home() {
             </div>
             <div className="home_right">
                 <div className="home_right_box" style={{ display: isFolderOpen ? "block" : "none" }}>
-                    <h3 className="folder_name">{folderName}</h3>
                     <div className="notes_box">
                         {notes.map((note) => {
-                            return <div key={note._id} className="note_message"><p>{note.message}</p></div>
+                            return <div key={note._id} className="note_message">
+                                <p>{note.message}</p>
+                                <div className="note_options">
+                                    
+                                </div>
+                            </div>
                         })}
 
                     </div>
@@ -249,21 +300,33 @@ function Home() {
                 </div>
             </div>
 
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title="Folder name"
+                inputValue={newFolderName}
+                onInputChange={(e) => setNewFolderName(e.target.value)}
+                error={newFolderNameErr}
+                onSubmit={handleClick}
+                submitText="Create"
+            />
 
-            <div className="modal" style={{ display: !isModalOpen ? "none" : "flex" }}>
-                <div className="modal_box">
-                    <button className="modal_close" onClick={() => setIsModalOpen(false)}><i className='bxr  bxs-x'  ></i> </button>
-                    <h2 className="modal_title">Folder name</h2>
-                    <div className="input_box">
-                        <input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="name" className="form_input" />
-                        <span className="input_icon"><i className='bxr  bxs-pencil'  ></i>  </span>
-                    </div>
-                    <p style={{ fontSize: 14, color: "red", marginLeft: 10 }}>{newFolderNameErr}</p>
+            <Modal
+                isOpen={isChangeNameFolderModalOpen}
+                onClose={() => setIsChangeNameFolderModalOpen(false)}
+                title="New name"
+                inputValue={newChangedFolderName}
+                onInputChange={(e) => setNewChangedFolderName(e.target.value)}
+                error=""
+                onSubmit={changeFolderName}
+                submitText="Change"
+            />
 
-
-                    <button className="form_btn" onClick={handleClick}>Create</button>
-                </div>
-            </div>
+            <ErrModal
+                isOpen={isErrorModalOpen}
+                onClose={() => setIsErrorModalOpen(false)}
+                title={errModalTitle}
+            />
 
         </div>
 
