@@ -6,6 +6,7 @@ import ErrModal from "../components/errorModal/errorModal.jsx";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 import "./css/home.css"
+import "./css/responsive.css"
 
 function Home() {
     const token = JSON.parse(localStorage.getItem("token"))
@@ -195,17 +196,77 @@ function Home() {
         }
     }
 
+    const [editingNoteId, setEditingNoteId] = useState(null);
+    const [editedMessage, setEditedMessage] = useState("");
+
+    const saveNote = async (id) => {
+        try {
+            let res = await fetch(`${apiUrl}/notes/update-note/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: editedMessage })
+            });
+            let json = await res.json();
+            if (json.success) {
+                setNotes(prev =>
+                    prev.map(note =>
+                        note._id === id ? { ...note, message: editedMessage } : note
+                    )
+                );
+                setEditingNoteId(null);
+                setEditedMessage("");
+            } else {
+                showError("Xatolik yuz berdi");
+            }
+        } catch (err) {
+            showError(err.message);
+        }
+    };
+
+    useEffect(() => {
+        if (editingNoteId) {
+            const textarea = document.querySelector(".edit_note_textarea");
+            if (textarea) {
+                textarea.style.height = "auto";
+                textarea.style.height = textarea.scrollHeight + "px";
+            }
+        }
+    }, [editingNoteId]);
+
+    const [responsiveHomeLeft, setResponsiveHomeLeft] = useState(false)
+    const [isActiveHamburgerIcon, setIsActiveHamburgerIcon] = useState(false)
+    const [isActiveHomeLeftCloseIcon, setIsActiveHomeLeftCloseIcon] = useState(false)
+
+    const openResponsiveHomeLeft = () => {
+        setResponsiveHomeLeft(true)
+        setIsActiveHamburgerIcon(true)
+        setIsActiveHomeLeftCloseIcon(true)
+    }
+
+    const closeResponsiveHomeLeft = () => {
+        setResponsiveHomeLeft(false)
+        setIsActiveHamburgerIcon(false)
+        setIsActiveHomeLeftCloseIcon(false)
+    }
+
+
     return (
         <div className="home_page" onClick={(e) => {
             if (!e.target.closest(".folders_box") && !e.target.closest(".modal")) {
                 setActiveFolderOption(null)
             }
         }}>
-            <div className="home_left">
-
+            <div className="home_left" style={{ display: responsiveHomeLeft && "block" }}>
+                <button style={{ display: isActiveHomeLeftCloseIcon && "block" }} className="home_left_close_icon" onClick={() => {
+                    closeResponsiveHomeLeft()
+                }}>
+                    <i class='bxr  bx-x'  ></i>
+                </button>
                 <h3 className="user_name">{username}</h3>
                 <div className="create_folder_btn_box">
-                    <button className="create_folder_btn" onClick={() => setIsModalOpen(true)}>
+                    <button className="create_folder_btn" onClick={() => {
+                        setIsModalOpen(true)
+                    }}>
                         <i className='bxr  bx-folder-plus'  ></i> Create Folder
                     </button>
                 </div>
@@ -213,6 +274,7 @@ function Home() {
                 <div className="folders_box">
                     {folders.map((folder) => <div style={{ background: activeFolder == folder._id ? "rgba(139, 92, 246, 0.4)" : "" }} key={folder._id} onClick={(e) => {
                         openFolder(folder._id)
+                        closeResponsiveHomeLeft()
                         setActiveFolder(folder._id)
                     }} className="folder_item">
                         <p className="folder_title">{folder.noteName}</p>
@@ -259,16 +321,76 @@ function Home() {
                 </div>
             </div>
             <div className="home_right">
+                <button className="home_left_hamburger_icon" onClick={() => {
+                    openResponsiveHomeLeft()
+                }} style={{ display: isActiveHamburgerIcon && "none" }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5" stroke-linecap="round"
+                        aria-hidden="true" role="img">
+                        <path d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
                 <div className="home_right_box" style={{ display: isFolderOpen ? "block" : "none" }}>
                     <div className="notes_box">
-                        {notes.map((note) => {
-                            return <div key={note._id} className="note_message">
-                                <p>{note.message}</p>
+                        {notes.map((note) => (
+                            <div key={note._id} className="note_message">
+                                {editingNoteId === note._id ? (
+                                    <textarea
+                                        className="edit_note_textarea"
+                                        value={editedMessage}
+                                        onChange={(e) => {
+                                            setEditedMessage(e.target.value);
+                                            e.target.style.height = "auto";
+                                            e.target.style.height = e.target.scrollHeight + "px";
+                                        }}
+                                        autoFocus
+                                    />
+                                ) : (
+                                    <p className="note_p">{note.message}</p>
+                                )}
+
                                 <div className="note_options">
-                                    
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                setNotes(prevNotes => prevNotes.filter(n => n._id !== note._id))
+
+                                                let res = await fetch(`${apiUrl}/notes/delete-note/${note._id}`, {
+                                                    method: "DELETE",
+                                                })
+                                                let json = await res.json()
+
+                                                if (!json.success) {
+                                                    showError(json.error)
+                                                    setNotes(prevNotes => [...prevNotes, note])
+                                                }
+                                            } catch (err) {
+                                                showError(err.message)
+                                                setNotes(prevNotes => [...prevNotes, note])
+                                            }
+                                        }}
+                                    >
+                                        <i className="bx bx-trash"></i>
+                                    </button>
+
+
+                                    {editingNoteId === note._id ? (
+                                        <button onClick={() => saveNote(note._id)}>
+                                            <i className='bx bx-check'></i> {/* Save icon */}
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => {
+                                            setEditingNoteId(note._id);
+                                            setEditedMessage(note.message);
+                                        }}>
+                                            <i className='bx bxs-pencil'></i>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                        })}
+                        ))}
+
 
                     </div>
                 </div>

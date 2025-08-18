@@ -1,0 +1,54 @@
+/* Noutbuk */
+@media (max-width: 1440px) {
+    .notes_box {
+        padding: 50px 100px;
+    }
+
+    .folder_form {
+        padding: 20px 100px;
+    }
+}
+
+/* Planshet */
+@media (max-width: 1024px) {
+    .notes_box {
+        padding: 50px;
+    }
+
+    .folder_form {
+        padding: 20px 50px;
+    }
+}
+
+/* Katta telefon */
+@media (max-width: 767px) {
+    .home_right {
+        width: 100%;
+    }
+
+    .home_left {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 2;
+    }
+
+    .home_left_hamburger_icon {
+        display: block;
+    }
+
+    .notes_box {
+        padding: 10px;
+        margin-top: 20px;
+    }
+
+    .folder_form {
+        padding: 10px;
+        width: 100%;
+    }
+}
+
+/* Telefon */
+@media (max-width: 480px) {}
