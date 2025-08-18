@@ -319,6 +319,13 @@ function Home() {
                         </div>
                     </div>)}
                 </div>
+
+                <button className="exit_button" onClick={() => {
+                    localStorage.clear()
+                    navigate("/login")
+                }}>
+                    <i className='bxr  bx-arrow-out-up-square-half bx-rotate-90'  ></i>   <p>exit</p>
+                </button>
             </div>
             <div className="home_right">
                 <button className="home_left_hamburger_icon" onClick={() => {
